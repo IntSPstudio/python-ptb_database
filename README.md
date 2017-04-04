@@ -1,2 +1,2 @@
-# python-ptbd_database
-Python PTBD Database
+# PTB Database
+Python PTB Database
