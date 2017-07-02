@@ -6,7 +6,7 @@
 
 
 
-### Vanilla
+### Vanilla database
 
 ![](http://i.imgur.com/WIPfciG.png)
 
