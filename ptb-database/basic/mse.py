@@ -23,20 +23,24 @@ elif osSystem == 2:
 else:
 	osClearCommand =""
 #PAGES
-pagesAddEventTitle ="Add event"
-pagesAddEvent ="1"
-pagesShowEventsTitle ="Events"
-pagesShowEvents ="2"
-pagesShowInfoTitle ="Info"
-pagesShowInfo ="3"
-pagesOpenLogTitle ="Select Log"
-pagesOpenLog ="4"
-pagesOpenProjectTitle ="Select Project"
-pagesOpenProject ="5"
 pagesMainMenuTitle ="Menu"
 pagesMainMenu ="0"
+pagesAddEventTitle ="Add event"
+pagesAddEvent ="1"
+pagesInventoryTitle ="Inventory"
+pagesInventory ="Inventory"
+pagesShowEventsTitle ="Events"
+pagesShowEvents ="2"
+pagesFeaturesTitle ="Features"
+pagesFeatures ="3"
+pagesShowInfoTitle ="Info"
+pagesShowInfo ="4"
+pagesOpenLogTitle ="Select Log"
+pagesOpenLog ="5"
+pagesOpenProjectTitle ="Select Project"
+pagesOpenProject ="6"
 pagesExitTitle ="Exit"
-pagesExit ="6"
+pagesExit ="7"
 #VISUAL
 vslStLineAA ="]"
 vslStLineAB ="=="+ vslStLineAA
@@ -59,6 +63,8 @@ def checkCurrentPage(pid):
 		result = pagesAddEventTitle
 	elif pid == pagesShowEvents:
 		result = pagesShowEventsTitle
+	elif pid == pagesFeatures:
+		result = pagesFeaturesTitle
 	elif pid == pagesShowInfo:
 		result = pagesShowInfoTitle
 	elif pid == pagesOpenLog:

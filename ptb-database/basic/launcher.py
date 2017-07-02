@@ -27,12 +27,13 @@ currentLogFile =""
 currentLogID =0
 currentLog =""
 #PAGES
+uiusBckMainMenu = mse.pagesMainMenu
 uiusBckAddEvent = mse.pagesAddEvent
 uiusBckShowEvents = mse.pagesShowEvents
+uiusBckFeatures = mse.pagesFeatures
 uiusBckShowInfo = mse.pagesShowInfo
 uiusBckOpenLog = mse.pagesOpenLog
 uiusBckOpenProject = mse.pagesOpenProject
-uiusBckMainMenu = mse.pagesMainMenu
 uiusBckExit = mse.pagesExit
 #VISUAL
 bgdLine = it8c.vslTerminalLine(0,"")
@@ -46,13 +47,10 @@ def vslBasicTopPrint():
 	print(bgdLine)
 	if currentProject !="":
 		if currentLog !="":
-			#print(dcnyStInputLine +" "+ mse.checkCurrentPage(mainPage) +" - Project: "+ currentProject +" - Log: "+ currentLog)
 			print(dcnyStInputLine +" "+ "Project:"+ currentProject +" - Log:"+ currentLog)
 		else:
-			#print(dcnyStInputLine +" "+ mse.checkCurrentPage(mainPage) +" - Project: "+ currentProject)
 			print(dcnyStInputLine +" "+ "Project:"+ currentProject)
 	else:
-		#print(dcnyStInputLine +" "+ mse.checkCurrentPage(mainPage))
 		print(dcnyStInputLine)
 #CHANGE LOG FILE
 def changeLogFile():
@@ -69,7 +67,7 @@ def changeLogFile():
 	return result
 #ADD EVENT TO PROJECT
 def addEventToProject():
-	currentLogUrl = currentProject +"/"+ currentLog +".csv"
+	currentLogUrl = currentProject +"/"+ currentLog +"-log.csv"
 	if it8c.fileTextExists(currentLogUrl) == 1:
 		currentLogFile = it8c.csvReadFile(currentLogUrl,";")
 		currentLogID = len(currentLogFile)
@@ -140,6 +138,14 @@ if __name__ == "__main__":
 			#TC
 			checka = input(dcnyStInputLine)
 			mainPage = uiusBckMainMenu
+		#FEATURES
+		if mainPage == uiusBckFeatures:
+			#TA
+			exCommand("clear")
+			vslBasicTopPrint()
+			#TC
+			checka = input(dcnyStInputLine)
+			mainPage = uiusBckMainMenu
 		#INFO
 		if mainPage == uiusBckShowInfo:
 			#TA
@@ -181,6 +187,7 @@ if __name__ == "__main__":
 			#TA
 			exCommand("clear")
 			vslBasicTopPrint()
+			#TB
 			print(mse.printAllPages())
 			#TC
 			checka = input(dcnyStInputLine)
