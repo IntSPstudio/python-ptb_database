@@ -2,7 +2,7 @@
 # Made by IntSPstudio
 # PTB Database
 # Thank you for using this software!
-# Version: 0.1.1.20170207
+# Version: 0.1.2.20170207
 # ID: 980005032
 #
 # Twitter: @IntSPstudio
@@ -36,7 +36,6 @@ if __name__ == "__main__":
 			#TB
 			mse.scanMasterDatabase() #SCAN
 			#TC
-			#mse.masterSleep(2)
 			mainPage = mse.uiusBckMenu
 		#MODIFY PRODUCT
 		elif mainPage == mse.uiusModifyProduct:

@@ -178,8 +178,6 @@ def basicAddBarcodeToInventary():
 	while continuity == 1:
 		userRawInput = input("Product barcode: ")
 		userInput = makeLdMod(userRawInput)
-		#productInfo = readProductDataRef(userInput)
-		#print(productInfo)
 		if userInput !="":
 			if userInput !="ext":
 				userInputId +=1
@@ -225,64 +223,65 @@ def basicAddBarcodesToMasterDatabase(rawListArray):
 def scanMasterDatabase():
 	#SCAN
 	dpMaxID = checkProductSpecId()
-	dpScanArray = it8c.dataCreateArray(dpMaxID,3,"")
-	dpScanArray[0][0] ="id"
-	dpScanArray[0][1] ="logab"
-	dpScanArray[0][2] ="barcode"
-	for i in range(1,dpMaxID):
-		pointa = fldrUrlMasterDatabase +"/"+ str(i)
-		productQuant = pointa +"/"+ fldrFileQuantity
-		productID = pointa +"/"+ fldrFileProduct
-		productLogAb = pointa +"/"+ fldrFileLogAb
-		#ID FOLDER
-		if os.path.exists(pointa):	
-			#LOG AB
-			if it8c.fileTextExists(productLogAb) == 1:
-				checka = mainReadTextFile(productLogAb)
-				checkb = it8c.checkIfItIsNumber(checka)
-				if checkb == 1:
-					if checka == "1":
-						checkc ="1"
+	if dpMaxID > 1:
+		dpScanArray = it8c.dataCreateArray(dpMaxID,3,"")
+		dpScanArray[0][0] ="id"
+		dpScanArray[0][1] ="logab"
+		dpScanArray[0][2] ="barcode"
+		for i in range(1,dpMaxID):
+			pointa = fldrUrlMasterDatabase +"/"+ str(i)
+			productQuant = pointa +"/"+ fldrFileQuantity
+			productID = pointa +"/"+ fldrFileProduct
+			productLogAb = pointa +"/"+ fldrFileLogAb
+			#ID FOLDER
+			if os.path.exists(pointa):	
+				#LOG AB
+				if it8c.fileTextExists(productLogAb) == 1:
+					checka = mainReadTextFile(productLogAb)
+					checkb = it8c.checkIfItIsNumber(checka)
+					if checkb == 1:
+						if checka == "1":
+							checkc ="1"
+						else:
+							checkc ="0"
 					else:
 						checkc ="0"
-				else:
-					checkc ="0"
-			#ID
-			if it8c.fileTextExists(productID) == 1:
-				content = mainReadTextFile(productID)
-				if content !="":
-					dpScanArray[i][0] = str(i)
-					dpScanArray[i][1] = checkc
-					dpScanArray[i][2] = content
-	#LOGAB -
-	dpScanArrayHeight = len(dpScanArray)
-	dpRefdArrayHeight =0
-	z =0
-	for x in range(0,2):
-		if x == 1:
-			dpRefdArrayContent = it8c.dataCreateArray(dpRefdArrayHeight,2,"")
-		for y in range(0,dpScanArrayHeight):
-			checka = dpScanArray[y][1]
-			if checka == "1":
-				if x == 0:
-					dpRefdArrayHeight +=1
-				if x == 1:
-					dpRefdArrayContent[z][1] = dpScanArray[y][0]
-					dpRefdArrayContent[z][0] = dpScanArray[y][2]
-					z +=1
-	#CHECK OBJECTS
-	pointa = it8c.dataExtractArrayColumn(dpRefdArrayContent,0)
-	pointb = it8c.dataCheckListObjects(pointa)
-	pointc = len(pointb)
-	pointa = it8c.dataCreateArray(pointc,2,"")
-	for i in range(0,pointc):
-		pointa[i][0] = pointb[i][2]
-		pointa[i][1] = pointb[i][1]
-	#SAVE FILES
-	url = fldrUrlSystem +"/"+ fldrFileDbProductIdList #DB PRODUCT ID's
-	it8c.copaWrite(url,dpRefdArrayContent,"=")
-	url = fldrUrlSystem +"/"+ fldrFileDbProductAmounts #DB PRODUCT AMOUNTS
-	it8c.copaWrite(url,pointa,"=")
+				#ID
+				if it8c.fileTextExists(productID) == 1:
+					content = mainReadTextFile(productID)
+					if content !="":
+						dpScanArray[i][0] = str(i)
+						dpScanArray[i][1] = checkc
+						dpScanArray[i][2] = content
+		#LOGAB -
+		dpScanArrayHeight = len(dpScanArray)
+		dpRefdArrayHeight =0
+		z =0
+		for x in range(0,2):
+			if x == 1:
+				dpRefdArrayContent = it8c.dataCreateArray(dpRefdArrayHeight,2,"")
+			for y in range(0,dpScanArrayHeight):
+				checka = dpScanArray[y][1]
+				if checka == "1":
+					if x == 0:
+						dpRefdArrayHeight +=1
+					if x == 1:
+						dpRefdArrayContent[z][1] = dpScanArray[y][0]
+						dpRefdArrayContent[z][0] = dpScanArray[y][2]
+						z +=1
+		#CHECK OBJECTS
+		pointa = it8c.dataExtractArrayColumn(dpRefdArrayContent,0)
+		pointb = it8c.dataCheckListObjects(pointa)
+		pointc = len(pointb)
+		pointa = it8c.dataCreateArray(pointc,2,"")
+		for i in range(0,pointc):
+			pointa[i][0] = pointb[i][2]
+			pointa[i][1] = pointb[i][1]
+		#SAVE FILES
+		url = fldrUrlSystem +"/"+ fldrFileDbProductIdList #DB PRODUCT ID's
+		it8c.copaWrite(url,dpRefdArrayContent,"=")
+		url = fldrUrlSystem +"/"+ fldrFileDbProductAmounts #DB PRODUCT AMOUNTS
+		it8c.copaWrite(url,pointa,"=")
 #WRITE PRODUCT REF DATA
 def basicWriteProductRefData():
 	productID = makeLdMod(input("Product barcode: "))
