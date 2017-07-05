@@ -404,7 +404,6 @@ def basicModifyProductData():
 								success =0
 								for i in range(0,pointaLength):
 									pointd = pointc[i][0] #TITLE
-									print("dif", pointd, pointa)
 									if pointd == pointa:
 										success =1
 										pointc[i][1] = pointb #CONTENT
@@ -434,3 +433,14 @@ def basicModifyProductData():
 				print("Ref file doesent exists")
 		else:
 			print("Product id could not found")
+#EXIT
+def exitLogo():
+	a = "#########################"
+	b = "##      ##########      ##"
+	c = "##      ##      ##      ##"
+	d = "##########      ########"
+	e = "##      ##      ########"
+	f = "##      ##      ##      ##"
+	g = "##      ##      ##      ##"
+	h = "##      ##      ########"
+	return "\n"+ a +"\n"+ b +"\n"+ c +"\n"+ d +"\n"+ e +"\n"+ f +"\n"+ g +"\n"+ h

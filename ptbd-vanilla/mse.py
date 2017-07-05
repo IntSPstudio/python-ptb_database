@@ -90,3 +90,14 @@ def printAllPages():
 		else:
 			list = list +"0"+ checka + vslStLineAA + pointa
 	return list
+#EXIT
+def exitLogo():
+	a = "#########################"
+	b = "##      ##########      ##"
+	c = "##      ##      ##      ##"
+	d = "##########      ########"
+	e = "##      ##      ########"
+	f = "##      ##      ##      ##"
+	g = "##      ##      ##      ##"
+	h = "##      ##      ########"
+	return "\n"+ a +"\n"+ b +"\n"+ c +"\n"+ d +"\n"+ e +"\n"+ f +"\n"+ g +"\n"+ h

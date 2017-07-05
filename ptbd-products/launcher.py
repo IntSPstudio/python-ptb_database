@@ -73,6 +73,7 @@ if __name__ == "__main__":
 			#TA
 			mse.clearScreen()
 			continuity =0
+			print(mse.exitLogo())
 		#MENU
 		else:
 			#TA
