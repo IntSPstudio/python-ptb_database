@@ -37,7 +37,7 @@ def print1dArray(userArrayContent):
 	return it8c.dataPrintList(userArrayContent,"\n")
 #PRINT 2D ARRAY
 def print2dArray(userArrayContent):
-	return it8c.dataSmrPrintArray(userArrayContent," | ","",0)
+	return it8c.dataSmrPrintArray(userArrayContent," : ","",0)
 #SAVE 1D ARRAY
 def save1dArray(userArrayContent,arrayName):
 	it8c.fileWriteTextList(userArrayContent,arrayName)
@@ -55,6 +55,7 @@ def masterSleep(seconds):
 	time.sleep(seconds)
 #GENERAL
 mainExitCommand ="ext"
+mainExitCommandWithoutSaving ="nosave"
 #FOLDERS
 fldrMasterDatabase ="database"
 fldrUrlMasterDatabase = fldrMasterDatabase
@@ -70,12 +71,13 @@ fldrBackupData ="backup"
 fldrUrlBackupData = fldrUrlMasterDatabase +"/"+ fldrBackupData
 fldrSystem ="system"
 fldrUrlSystem = fldrUrlMasterDatabase +"/"+ fldrSystem
+fldrUrlDataContentParameters ="usdaco"
 #FILES
 fldrFileQuantity ="quantity.txt"
 fldrFileProduct ="id.txt"
 fldrFileCreationDate ="cd.txt"
 fldrFileLogAb ="logab.txt"
-fldrFileDataContent ="usdaco.txt"
+fldrFileDataContent = fldrUrlDataContentParameters +".txt"
 fldrFileDbProductIdList ="dbprid.txt"
 fldrFileDbProductAmounts ="dbpram.txt"
 fldrFileDbProductGlobalView ="dpprgv.csv"
@@ -183,8 +185,13 @@ def basicAddBarcodeToInventary():
 		userInput = makeLdMod(userRawInput)
 		if userInput !="":
 			if userInput != mainExitCommand:
-				userInputId +=1
-				userArrayContent.extend([userInput])
+				if userInput != mainExitCommandWithoutSaving:
+					userInputId +=1
+					userArrayContent.extend([userInput])
+				else:
+					continuity =0
+					userArrayContent =""
+					return ""
 			else:
 				continuity =0
 				if userInputId > 0:
@@ -229,93 +236,78 @@ def scanMasterDatabase():
 	#SCAN
 	dpMaxID = checkProductSpecId()
 	if dpMaxID > 1:
-		dpScanArray = it8c.dataCreateArray(dpMaxID,3,"")
-		dpScanArray[0][0] ="id"
+		dpScanArray = it8c.dataCreateArray(dpMaxID,6,"0")
+		dpScanArray[0][0] ="id" #ID
 		dpScanArray[0][1] ="logab"
-		dpScanArray[0][2] ="barcode"
+		dpScanArray[0][2] ="mamount" #MAIN QUANTITY
+		dpScanArray[0][3] ="camount" #LOGAB QUANTITY
+		dpScanArray[0][4] ="barcodes"
+		dpScanArray[0][5] ="info"	
 		for i in range(1,dpMaxID):
-			pointa = fldrUrlMasterDatabase +"/"+ str(i)
-			productQuant = pointa +"/"+ fldrFileQuantity
-			productID = pointa +"/"+ fldrFileProduct
-			productLogAb = pointa +"/"+ fldrFileLogAb
+			productUrl = fldrUrlMasterDatabase +"/"+ str(i) #URL
+			productID = productUrl +"/"+ fldrFileProduct
+			productLogAb = productUrl +"/"+ fldrFileLogAb
+			productCreationDate = productUrl +"/"+ fldrFileCreationDate
 			#ID FOLDER
-			if os.path.exists(pointa):	
+			if os.path.exists(productUrl):	
 				#LOG AB
 				if it8c.fileTextExists(productLogAb) == 1:
 					checka = mainReadTextFile(productLogAb)
 					checkb = it8c.checkIfItIsNumber(checka)
 					if checkb == 1:
 						if checka == "1":
-							checkc ="1"
+							productLogAbValue ="1"
 						else:
-							checkc ="0"
+							productLogAbValue ="0"
 					else:
-						checkc ="0"
-				#ID
+						productLogAbValue ="0"
+				#ID (NAME)
 				if it8c.fileTextExists(productID) == 1:
 					content = mainReadTextFile(productID)
 					if content !="":
-						dpScanArray[i][0] = str(i)
-						dpScanArray[i][1] = checkc
-						dpScanArray[i][2] = content
-		#LOGAB -
-		dpScanArrayHeight = len(dpScanArray)
-		dpRefdArrayHeight =0
-		z =0
-		for x in range(0,2):
-			if x == 1:
-				dpRefdArrayContent = it8c.dataCreateArray(dpRefdArrayHeight,2,"")
-			for y in range(0,dpScanArrayHeight):
-				checka = dpScanArray[y][1]
-				if checka == "1":
-					if x == 0:
-						dpRefdArrayHeight +=1
-					if x == 1:
-						dpRefdArrayContent[z][1] = dpScanArray[y][0]
-						dpRefdArrayContent[z][0] = dpScanArray[y][2]
-						z +=1
-		#CHECK OBJECTS
-		pointa = it8c.dataExtractArrayColumn(dpRefdArrayContent,0)
-		pointb = it8c.dataCheckListObjects(pointa)
-		pointc = len(pointb)
-		pointa = it8c.dataCreateArray(pointc,2,"")
-		for i in range(0,pointc):
-			pointa[i][0] = pointb[i][2]
-			pointa[i][1] = pointb[i][1]
-		#INVENTORY SHEET
-		inventoryHeight = len(dpRefdArrayContent)
-		inventoryWidth =5
-		inventoryArray = it8c.dataCreateArray(inventoryHeight,inventoryWidth,"")
-		for i in range(0,inventoryHeight):
-			#COM
-			productID = str(dpRefdArrayContent[i][1]) #ID
-			#AMOUNT
-			checka = str(dpRefdArrayContent[i][0])
-			checkb =1
-			for y in range(0,i):
-				checkc = str(dpRefdArrayContent[y][0])
-				if checka == checkc:
-					checkb +=1
-			#DATE
-			productDateUrl = fldrUrlMasterDatabase +"/"+ productID +"/"+ fldrFileCreationDate
-			if it8c.fileTextExists(productDateUrl) == 1:
-				productDate = mainReadTextFile(productDateUrl)
+						productName = content
+				#CREATION DATE
+				if it8c.fileTextExists(productCreationDate) == 1:
+					content = mainReadTextFile(productCreationDate)
+					if content !="":
+						productCreationDateValue = content
 			#COLLECT
-			inventoryArray[i][0] = productDate #DATE
-			inventoryArray[i][1] = productID #ID
-			inventoryArray[i][2] = checkb #AMOUNT
-			inventoryArray[i][3] = checka #BARCODE
-			inventoryArray[i][4] = readProductDataRef(checka) #INFO FROM REF
+			dpScanArray[i][0] = str(i) #ID
+			dpScanArray[i][1] = str(productLogAbValue) #LOGAB
+			dpScanArray[i][4] = productName #NAME
+			dpScanArray[i][5] = readProductDataRef(productName) #INFO (INFO)
+		#MATH
+		productNameList = it8c.dataExtractArrayColumn(dpScanArray,4)
+		productNameListRefd = it8c.dataCheckListObjects(productNameList)
+		productNameListRefdLength = len(productNameListRefd)
+		productArrayLength = len(dpScanArray)
+		#RESET QUANTITY
+		for i in range(0,productNameListRefdLength):
+			productNameListRefd[i][0] ="0"
+			productNameListRefd[i][1] ="0"
+		#SCAN
+		dpScanArrayHeight = len(dpScanArray)
+		dpScanArrayWidth = len(dpScanArray[0])
+		for i in range(1, dpScanArrayHeight):
+			pointa = dpScanArray[i][4] #NAME
+			#SCAN
+			for j in range(0,productNameListRefdLength):
+				pointb = productNameListRefd[j][2] #NAME
+				if pointa == pointb:
+					pointc = int(productNameListRefd[j][0]) +1 #MAIN QUANTITY
+					pointd = int(productNameListRefd[j][1]) +1 #LOGAB QUANTITY
+					productNameListRefd[j][0] = pointc
+					dpScanArray[i][2] = pointc #ADD TO MAIN ARRAY
+					#LOGAB
+					currentProductIdUrl = fldrUrlMasterDatabase +"/"+ str(dpScanArray[i][0]) +"/"+ fldrFileLogAb #URL
+					if it8c.fileTextExists(currentProductIdUrl) == 1:
+						currentProductLogAb = str(mainReadTextFile(currentProductIdUrl))
+						if currentProductLogAb == "1":
+							productNameListRefd[j][1] = pointd
+							dpScanArray[i][3] = pointd #ADD TO MAIN ARRAY
 		#SAVE FILES
-		url = fldrUrlSystem +"/"+ fldrFileDbProductIdList #DB PRODUCT ID's
-		it8c.copaWrite(url,dpRefdArrayContent,"=")
-		url = fldrUrlSystem +"/"+ fldrFileDbProductAmounts #DB PRODUCT AMOUNTS
-		it8c.copaWrite(url,pointa,"=")
 		url = fldrUrlSystem +"/"+ fldrFileDbProductGlobalView #DB INVENTORY VIS
-		it8c.csvWriteFile(inventoryArray,url,";",0)
-		dpRefdArrayContent =""
-		pointa =""
-		inventoryArray =""
+		it8c.csvWriteFile(dpScanArray,url,";",0)
 #VIEW GLOBAL INVENTORY MOMENT
 def viewGlobalInvMom(customHeight):
 	currentLogUrl = fldrUrlSystem +"/"+ fldrFileDbProductGlobalView
@@ -329,12 +321,17 @@ def viewGlobalInvMom(customHeight):
 			maxHeight =10
 		checkb = it8c.dataFlipArrayObjects(currentLogFile)
 		if currentLogHeight <= maxHeight:
-			print(print2dArray(checkb))
+			printArray = checkb
 		else:
 			checkc = it8c.dataCreateArray(maxHeight,currentLogWidth,"")
 			for i in range(0, maxHeight):
 				checkc[i] = checkb[i]
-			print(print2dArray(checkc))
+			printArray = checkc
+		printArrayB = it8c.dataFlipArrayObjects(printArray)
+		invArrayInfo = "ID", "LA", "MQ", "CQ", "Barcode", "Info"
+		printArray = it8c.dataAddArrayRow(printArrayB,invArrayInfo)
+		printArrayB = it8c.dataFlipArrayObjects(printArray)
+		print(print2dArray(printArrayB))
 #WRITE PRODUCT REF DATA
 def basicWriteProductRefData():
 	productID = makeLdMod(input("Product barcode: "))
@@ -363,76 +360,85 @@ def basicWriteProductRefData():
 #MODIFY PRODUCT DATA
 def basicModifyProductData():
 	productID = makeLdMod(str(input("Product id: ")))
-	if productID != mainExitCommand:
-		productUrl = fldrUrlMasterDatabase +"/"+ productID
-		if os.path.exists(productUrl):
-			#PRODUCT CHECK
-			prCheckUrl = fldrUrlMasterDatabase +"/"+ productID +"/"+ fldrFileProduct
-			if it8c.fileTextExists(prCheckUrl) == 1:
-				checka = it8c.fileRead1LText(prCheckUrl)
-				checkb = readProductDataRef(checka)
-			print(checkb)
-			#MAIN
-			refPlateName = input("Ref file: ")
-			refPlateUrl = fldrUrlProductDataTemplates +"/"+ refPlateName +".txt"
-			if it8c.fileTextExists(refPlateUrl) == 1:
-				refPlateList = it8c.fileReadText(refPlateUrl)
-				refPlateListLength = len(refPlateList)
-				pageLogAb = refPlateListLength #LOGAB MODE
-				#PRINT
-				clearScreen()
-				for i in range(0,refPlateListLength):
-					checka ="{:02}".format(i)
-					print(checka + vslStLineAA + refPlateList[i])
-				checka ="{:02}".format(pageLogAb)
-				print(checka + vslStLineAA +"Logab")
-				#INPUT
-				checka = str(input("Option: "))
-				if checka != mainExitCommand:
-					checkb = it8c.checkIfItIsNumber(checka)
+	if productID !="":
+		if productID != mainExitCommand:
+			productUrl = fldrUrlMasterDatabase +"/"+ productID
+			if os.path.exists(productUrl):
+				#PRODUCT CHECK
+				prCheckUrl = fldrUrlMasterDatabase +"/"+ productID +"/"+ fldrFileProduct
+				if it8c.fileTextExists(prCheckUrl) == 1:
+					checka = it8c.fileRead1LText(prCheckUrl)
+					checkb = readProductDataRef(checka)
+				print(checkb)
+				#MAIN
+				refPlateName = input("Ref file: ")
+				refPlateUrl = fldrUrlProductDataTemplates +"/"+ refPlateName +".txt"
+				if it8c.fileTextExists(refPlateUrl) == 1:
+					refPlateList = it8c.fileReadText(refPlateUrl)
+					refPlateListLength = len(refPlateList)
+					pageLogAb = refPlateListLength #LOGAB MODE
+					#PRINT
 					clearScreen()
-					if checkb == 1:
-						checka = int(checka)
-						if checka < pageLogAb:
-							pointa = refPlateList[checka] #CONTENT TITLE
-							checkc = pointa +": "
-							pointb = input(checkc) #CONTENT INPUT
-							checkd = fldrUrlMasterDatabase +"/"+ productID +"/"+ fldrFileDataContent #DATA FILE
-							if it8c.fileTextExists(checkd) == 1:
-								pointc = it8c.copaRead(checkd,"=") #CONTENT FILE
-								pointaLength = len(pointc)
-								success =0
-								for i in range(0,pointaLength):
-									pointd = pointc[i][0] #TITLE
-									if pointd == pointa:
-										success =1
-										pointc[i][1] = pointb #CONTENT
-								if success == 0:
-									pointd = it8c.dataCreateList(2,"")
-									pointd[0] = pointa #TITLE
-									pointd[1] = pointb #CONTENT
-									pointe = it8c.dataAddArrayRow(pointc,pointd)
-									pointc = pointe
-								it8c.copaWrite(checkd,pointc,"=")
+					for i in range(0,refPlateListLength):
+						checka ="{:02}".format(i)
+						print(checka + vslStLineAA + refPlateList[i])
+					checka ="{:02}".format(pageLogAb)
+					print(checka + vslStLineAA +"Logab")
+					#INPUT
+					checka = str(input("Option: "))
+					if checka != mainExitCommand:
+						checkb = it8c.checkIfItIsNumber(checka)
+						clearScreen()
+						if checkb == 1:
+							checka = int(checka)
+							if checka < pageLogAb:
+								pointa = refPlateList[checka] #CONTENT TITLE
+								checkc = pointa +": "
+								pointb = input(checkc) #CONTENT INPUT
+								checkd = fldrUrlMasterDatabase +"/"+ productID +"/"+ fldrFileDataContent #DATA FILE
+								if it8c.fileTextExists(checkd) == 1:
+									pointc = it8c.copaRead(checkd,"=") #CONTENT FILE
+									pointaLength = len(pointc)
+									success =0
+									for i in range(0,pointaLength):
+										pointd = pointc[i][0] #TITLE
+										if pointd == pointa:
+											success =1
+											pointc[i][1] = pointb #CONTENT
+									if success == 0:
+										pointd = it8c.dataCreateList(2,"")
+										pointd[0] = pointa #TITLE
+										pointd[1] = pointb #CONTENT
+										pointe = it8c.dataAddArrayRow(pointc,pointd)
+										pointc = pointe
+									it8c.copaWrite(checkd,pointc,"=")
+								else:
+									pointc = it8c.dataCreateArray(1,2,"")
+									pointc[0][0] = pointa #TITLE
+									pointc[0][1] = pointb #CONTENT
+									it8c.copaWrite(checkd,pointc,"=")
+								#PAR HISTORY FOLDER
+								fldrUrl = productUrl +"/"+ fldrUrlDataContentParameters
+								if not os.path.exists(fldrUrl):
+									os.makedirs(fldrUrl)
+								#PAR HISTORY NAME
+								fileName = str.lower(it8c.lettersdigits(pointa,""))
+								fileUrl = fldrUrl +"/"+ fileName +".txt"
+								it8c.copaMod(fileUrl,getTimeAndDate(0),pointb,0,"")
 							else:
-								pointc = it8c.dataCreateArray(1,2,"")
-								pointc[0][0] = pointa #TITLE
-								pointc[0][1] = pointb #CONTENT
-								it8c.copaWrite(checkd,pointc,"=")
-						else:
-							if checka == pageLogAb:
-								pageLogAbUrl = fldrUrlMasterDatabase +"/"+ productID +"/"+ fldrFileLogAb #URL
-								if it8c.fileTextExists(pageLogAbUrl) == 1:
-									pageLogAbContent = str(mainReadTextFile(pageLogAbUrl)) #READ
-									if pageLogAbContent != "0":
-										result ="0"
-									else:
-										result ="1"
-									mainWriteListTextFile(result,pageLogAbUrl) #SAVE
+								if checka == pageLogAb:
+									pageLogAbUrl = fldrUrlMasterDatabase +"/"+ productID +"/"+ fldrFileLogAb #URL
+									if it8c.fileTextExists(pageLogAbUrl) == 1:
+										pageLogAbContent = str(mainReadTextFile(pageLogAbUrl)) #READ
+										if pageLogAbContent != "0":
+											result ="0"
+										else:
+											result ="1"
+										mainWriteListTextFile(result,pageLogAbUrl) #SAVE
+				else:
+					print("Ref file doesent exists")
 			else:
-				print("Ref file doesent exists")
-		else:
-			print("Product id could not found")
+				print("Product id could not found")
 #EXIT
 def exitLogo():
 	a = "#########################"

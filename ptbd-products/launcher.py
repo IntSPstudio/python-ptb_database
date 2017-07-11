@@ -2,7 +2,7 @@
 # Made by IntSPstudio
 # PTB Database
 # Thank you for using this software!
-# Version: 0.1.3.20170307
+# Version: 0.1.4.20171207
 # ID: 980005032
 #
 # Twitter: @IntSPstudio
@@ -13,8 +13,8 @@ import mse
 #RETURN DEFAULT VSL SETTINGS
 def rDefVslSettings():
 	mse.clearScreen()
-	print(mse.getTimeAndDate(1) +" : "+ mse.returnPageName(mainPage))
 	print(vslMainTobBar)
+	print(mse.vslStLineAB  +" "+ mse.getTimeAndDate(1) +" : "+ mse.returnPageName(mainPage))
 #START
 if __name__ == "__main__":
 	#SETTINGS
@@ -43,8 +43,9 @@ if __name__ == "__main__":
 			#TA
 			rDefVslSettings()
 			#TB
+			mse.scanMasterDatabase() #SCAN
 			mse.viewGlobalInvMom(10)
-			print(vslMainTobBar)
+			#print(vslMainTobBar)
 			mse.basicModifyProductData()
 			#TC
 			mainPage = mse.uiusBckMenu
