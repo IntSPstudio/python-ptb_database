@@ -2,7 +2,7 @@
 # Made by IntSPstudio
 # PTB Database
 # Thank you for using this software!
-# Version: 0.1.4.20171207
+# Version: 0.1.5.20171207
 # ID: 980005032
 #
 # Twitter: @IntSPstudio
@@ -34,7 +34,7 @@ if __name__ == "__main__":
 			rDefVslSettings()
 			#TB
 			mse.scanMasterDatabase() #SCAN
-			mse.viewGlobalInvMom(10)
+			mse.viewLogAbSepInvMom(5)
 			#TC
 			checka = input(vslStInputAB)
 			mainPage = mse.uiusBckMenu
@@ -44,7 +44,7 @@ if __name__ == "__main__":
 			rDefVslSettings()
 			#TB
 			mse.scanMasterDatabase() #SCAN
-			mse.viewGlobalInvMom(10)
+			mse.viewLogAbTrueInvMom(10)
 			#print(vslMainTobBar)
 			mse.basicModifyProductData()
 			#TC

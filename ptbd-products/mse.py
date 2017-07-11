@@ -81,6 +81,8 @@ fldrFileDataContent = fldrUrlDataContentParameters +".txt"
 fldrFileDbProductIdList ="dbprid.txt"
 fldrFileDbProductAmounts ="dbpram.txt"
 fldrFileDbProductGlobalView ="dpprgv.csv"
+fldrFileDbProductLogAbTrue ="dpprlatv.csv"
+fldrFileDbProductLogAbFalse ="dpprlafv.csv"
 """
 fldrFileReference ="reference.csv"
 fldrUrlFileReference = fldrUrlMasterDatabase +"/"+ fldrFileReference
@@ -287,7 +289,6 @@ def scanMasterDatabase():
 			productNameListRefd[i][1] ="0"
 		#SCAN
 		dpScanArrayHeight = len(dpScanArray)
-		dpScanArrayWidth = len(dpScanArray[0])
 		for i in range(1, dpScanArrayHeight):
 			pointa = dpScanArray[i][4] #NAME
 			#SCAN
@@ -305,33 +306,87 @@ def scanMasterDatabase():
 						if currentProductLogAb == "1":
 							productNameListRefd[j][1] = pointd
 							dpScanArray[i][3] = pointd #ADD TO MAIN ARRAY
+		#SEPERATE LOGABBS
+		dpScanArrayHeight = len(dpScanArray)
+		dpScanArrayWidth = len(dpScanArray[0])
+		dpScanArrayTrueHeight =0
+		dpScanArrayTrueStep =0
+		dpScanArrayFalseHeight =0
+		dpScanArrayFalseStep =0
+		for xp in range(0,2):
+			if xp == 1:
+				dpScanArrayTrue = it8c.dataCreateArray(dpScanArrayTrueHeight,dpScanArrayWidth,"")
+				dpScanArrayFalse = it8c.dataCreateArray(dpScanArrayFalseHeight,dpScanArrayWidth,"")
+			for yp in range(0, dpScanArrayHeight):
+				pointa = str(dpScanArray[yp][1])
+				if pointa =="1":
+					if xp == 0:
+						dpScanArrayTrueHeight +=1
+					if xp == 1:
+						dpScanArrayTrue[dpScanArrayTrueStep] = dpScanArray[yp]
+						dpScanArrayTrueStep +=1
+				else:
+					if xp == 0:
+						dpScanArrayFalseHeight +=1
+					if xp == 1:
+						dpScanArrayFalse[dpScanArrayFalseStep] = dpScanArray[yp]
+						dpScanArrayFalseStep +=1
 		#SAVE FILES
-		url = fldrUrlSystem +"/"+ fldrFileDbProductGlobalView #DB INVENTORY VIS
+		url = fldrUrlSystem +"/"+ fldrFileDbProductGlobalView #DB GLOBAL VIEW
 		it8c.csvWriteFile(dpScanArray,url,";",0)
+		url = fldrUrlSystem +"/"+ fldrFileDbProductLogAbTrue #DB LOGAB TRUE
+		it8c.csvWriteFile(dpScanArrayTrue,url,";",0)
+		url = fldrUrlSystem +"/"+ fldrFileDbProductLogAbFalse #DB LOGAB FALSE
+		it8c.csvWriteFile(dpScanArrayFalse,url,";",0)
+#PRINT LIMITED
+def viewLimitedArray(currentLogFile, customHeight):
+	if customHeight !="":
+		maxHeight = customHeight
+	else:
+		maxHeight =10
+	currentLogWidth = len(currentLogFile[0])
+	currentLogHeight = len(currentLogFile)
+	checka = it8c.dataFlipArrayObjects(currentLogFile)
+	if currentLogHeight <= maxHeight:
+		printArray = checka
+	else:
+		checkb = it8c.dataCreateArray(maxHeight,currentLogWidth,"")
+		for i in range(0, maxHeight):
+			checkb[i] = checka[i]
+		printArray = checkb
+	printArrayB = it8c.dataFlipArrayObjects(printArray)
+	invArrayInfo = "ID", "LA", "MQ", "CQ", "Barcode", "Info"
+	printArray = it8c.dataAddArrayRow(printArrayB,invArrayInfo)
+	printArrayB = it8c.dataFlipArrayObjects(printArray)
+	return printArrayB
 #VIEW GLOBAL INVENTORY MOMENT
 def viewGlobalInvMom(customHeight):
 	currentLogUrl = fldrUrlSystem +"/"+ fldrFileDbProductGlobalView
 	if it8c.fileTextExists(currentLogUrl) == 1:
 		currentLogFile = it8c.csvReadFile(currentLogUrl,";")
-		currentLogWidth = len(currentLogFile[0])
-		currentLogHeight = len(currentLogFile)
-		if customHeight !="":
-			maxHeight = customHeight
-		else:
-			maxHeight =10
-		checkb = it8c.dataFlipArrayObjects(currentLogFile)
-		if currentLogHeight <= maxHeight:
-			printArray = checkb
-		else:
-			checkc = it8c.dataCreateArray(maxHeight,currentLogWidth,"")
-			for i in range(0, maxHeight):
-				checkc[i] = checkb[i]
-			printArray = checkc
-		printArrayB = it8c.dataFlipArrayObjects(printArray)
-		invArrayInfo = "ID", "LA", "MQ", "CQ", "Barcode", "Info"
-		printArray = it8c.dataAddArrayRow(printArrayB,invArrayInfo)
-		printArrayB = it8c.dataFlipArrayObjects(printArray)
-		print(print2dArray(printArrayB))
+		print(print2dArray(viewLimitedArray(currentLogFile,customHeight)))
+#VIEW LOGAB TRUE INVENTORY MOMENT
+def viewLogAbTrueInvMom(customHeight):
+	currentLogUrl = fldrUrlSystem +"/"+ fldrFileDbProductLogAbTrue
+	if it8c.fileTextExists(currentLogUrl) == 1:
+		currentLogFile = it8c.csvReadFile(currentLogUrl,";")
+		print(print2dArray(viewLimitedArray(currentLogFile,customHeight)))
+#VIEW LOGAB SEP INVENTORY MOMENT
+def viewLogAbSepInvMom(customHeight):
+	#URL
+	dpScanArrayFalseUrl = fldrUrlSystem +"/"+ fldrFileDbProductLogAbFalse
+	dpScanArrayTrueUrl = fldrUrlSystem +"/"+ fldrFileDbProductLogAbTrue
+	#LOAD FILES
+	if it8c.fileTextExists(dpScanArrayTrueUrl) == 1:
+		if it8c.fileTextExists(dpScanArrayFalseUrl) == 1:
+			#ARRAYS
+			dpScanArrayTrue = it8c.csvReadFile(dpScanArrayTrueUrl,";")
+			dpScanArrayFalse = it8c.csvReadFile(dpScanArrayFalseUrl,";")
+			#PRINT
+			print("Current")
+			print(print2dArray(viewLimitedArray(dpScanArrayTrue,customHeight)))
+			print("History")
+			print(print2dArray(viewLimitedArray(dpScanArrayFalse,customHeight)))
 #WRITE PRODUCT REF DATA
 def basicWriteProductRefData():
 	productID = makeLdMod(input("Product barcode: "))
