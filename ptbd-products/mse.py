@@ -83,6 +83,8 @@ fldrFileDbProductAmounts ="dbpram.txt"
 fldrFileDbProductGlobalView ="dpprgv.csv"
 fldrFileDbProductLogAbTrue ="dpprlatv.csv"
 fldrFileDbProductLogAbFalse ="dpprlafv.csv"
+fldrFileDbProductQuantityTrue ="dpprqttv.csv"
+fldrFileDbProductQuantityFalse ="dpprqtfv.csv"
 """
 fldrFileReference ="reference.csv"
 fldrUrlFileReference = fldrUrlMasterDatabase +"/"+ fldrFileReference
@@ -90,16 +92,19 @@ fldrFileReferenceExist =1
 """
 #PAGES
 uiusBcCheckInventory ="1"
-uiusModifyProduct ="2"
-uiusBcAddToInvetory ="4"
-uiusBckEditProductInfo ="3"
-uiusBckExit ="5"
+uiusBcCheckProduct ="2"
+uiusModifyProduct ="3"
+uiusBcAddToInvetory ="5"
+uiusBckEditProductInfo ="4"
+uiusBckExit ="6"
 uiusBckMenu ="0"
 def returnPageName(pageID):
 	if pageID == uiusBcCheckInventory:
 		return "Inventory"
 	elif pageID == uiusBcAddToInvetory:
 		return "Add to inventory"
+	elif pageID == uiusBcCheckProduct:
+		return "Check product data"
 	elif pageID == uiusModifyProduct:
 		return "Modify product data"
 	elif pageID == uiusBckEditProductInfo:
@@ -176,6 +181,62 @@ def readProductDataRef(productID):
 			return pointc +" "+ pointe
 	else:
 		return "no data"
+#CHECK PRODUCT DATA
+def basicCheckProductData():
+	#SELCT
+	for i in range(0,2):
+		print("01"+ vslStLineAA +"ID")
+		print("02"+ vslStLineAA +"Barcode")
+		if i == 0:
+			inputSelect = str(input(vslStLineAB))
+			clearScreen()
+			print(vslStTopBarAA)
+			print(vslStLineAB  +" "+ getTimeAndDate(1) +" : "+ returnPageName(uiusBcCheckProduct))
+	#INPUT SELECT
+	if inputSelect == "1":
+		#PRODUCT ID
+		checka = vslStLineAB +"ID: "
+		productID = str(input(checka))
+		if productID !="":
+			#SCAN
+			productUrl = fldrMasterDatabase +"/"+ productID #FOLDER
+			if os.path.exists(productUrl): #FOLDER
+				dataUrl = fldrFileProduct, fldrFileCreationDate, fldrFileLogAb
+				dataUrlLength = len(dataUrl)
+				productComData =  it8c.dataCreateList(dataUrlLength,"")
+				for i in range(0,dataUrlLength):
+					currentUrl = productUrl +"/"+ dataUrl[i]
+					if it8c.fileTextExists(currentUrl) == 1:
+						productComData[i] = mainReadTextFile(currentUrl)
+				#NAME
+				productComData.extend([readProductDataRef(productComData[0])])
+				#USER CONTENT
+				userContentDataUrl = productUrl +"/"+ fldrFileDataContent
+				userContentEz =0
+				if it8c.fileTextExists(userContentDataUrl) == 1:
+					userContentEz =1
+					userContentData = it8c.copaRead(userContentDataUrl,"=")
+					userContentDataLength = len(userContentData)
+				#PRINT
+				clearScreen()
+				print(vslStTopBarAA)
+				print(vslStLineAB  +" "+ getTimeAndDate(1) +" : "+ returnPageName(uiusBcCheckProduct))
+				print("Name: ", productComData[3])
+				print("Barcode:", productComData[0])
+				print("Creation date: ", productComData[1])
+				print("LogAb: ", productComData[2])
+				if userContentEz == 1:
+					print("")
+					for i in range(0, userContentDataLength):
+						pointa = userContentData[i][0]
+						pointb = userContentData[i][1]
+						print(pointa +":", pointb)
+				checka = input(vslStLineAB)
+	"""
+	if inputSelect == "2":
+		checka = vslStLineAB +"Barcode: "
+		productID = str(input(checka))
+	"""
 #ADD TO SHOPPING LIST
 def basicAddBarcodeToInventary():
 	continuity =1
@@ -306,6 +367,14 @@ def scanMasterDatabase():
 						if currentProductLogAb == "1":
 							productNameListRefd[j][1] = pointd
 							dpScanArray[i][3] = pointd #ADD TO MAIN ARRAY
+		#REMOVE 1ST LINE
+		dpScanArrayOld = dpScanArray
+		dpScanArrayOldLength = len(dpScanArray)
+		dpScanArrayHeight = len(dpScanArrayOld) -1
+		dpScanArrayWidth = len(dpScanArrayOld[0])
+		dpScanArray = it8c.dataCreateArray(dpScanArrayHeight,dpScanArrayWidth,"")
+		for i in range(1,dpScanArrayOldLength):
+			dpScanArray[i -1] = dpScanArrayOld[i]
 		#SEPERATE LOGABBS
 		dpScanArrayHeight = len(dpScanArray)
 		dpScanArrayWidth = len(dpScanArray[0])
@@ -331,6 +400,72 @@ def scanMasterDatabase():
 					if xp == 1:
 						dpScanArrayFalse[dpScanArrayFalseStep] = dpScanArray[yp]
 						dpScanArrayFalseStep +=1
+		#CALCULATE QUANTITY
+		dpScanArrayQuantity = it8c.dataCheckListObjects(it8c.dataExtractArrayColumn(dpScanArray,4))
+		dpScanArrayQuantityLength = len(dpScanArrayQuantity)
+		dpScanLogAbbTrueQuantity = it8c.dataCheckListObjects(it8c.dataExtractArrayColumn(dpScanArrayTrue,4))
+		dpScanLogAbbTrueQuantityLength = len(dpScanLogAbbTrueQuantity)
+		#RESET QUANTITY
+		for i in range(0,dpScanArrayQuantityLength):
+			dpScanArrayQuantity[i][0] = dpScanArrayQuantity[i][1]
+			dpScanArrayQuantity[i][1] ="0"
+		#CALCULATE
+		for yp in range(0,dpScanArrayQuantityLength):
+			pointa = dpScanArrayQuantity[yp][2]
+			for xp in range(0,dpScanLogAbbTrueQuantityLength):
+				pointb = dpScanLogAbbTrueQuantity[xp][2]
+				if pointa == pointb:
+					dpScanArrayQuantity[yp][1] = str(dpScanLogAbbTrueQuantity[xp][1])
+		dpScanArrayQuantityWidth = len(dpScanArrayQuantity[0])
+		dpScanLogAbbTrueLength =0
+		dpScanLogAbbTrueStep =0
+		dpScanLogAbbFalseLength =0
+		dpScanLogAbbFalseStep =0
+		for xp in range(0,2):
+			if xp == 1:
+				dpScanLogAbbTrueQuantity = it8c.dataCreateArray(dpScanLogAbbTrueLength,dpScanArrayQuantityWidth,"")
+				dpScanLogAbbFalseQuantity = it8c.dataCreateArray(dpScanLogAbbFalseLength,dpScanArrayQuantityWidth,"")
+			for yp in range(0,dpScanArrayQuantityLength):
+				pointa = int(dpScanArrayQuantity[yp][1])
+				if pointa == 0:
+					if xp == 0:
+						dpScanLogAbbFalseLength +=1
+					if xp == 1:
+						dpScanLogAbbFalseQuantity[dpScanLogAbbFalseStep] = dpScanArrayQuantity[yp]
+						dpScanLogAbbFalseStep +=1
+				else:
+					if xp == 0:
+						dpScanLogAbbTrueLength +=1
+					if xp == 1:
+						dpScanLogAbbTrueQuantity[dpScanLogAbbTrueStep] = dpScanArrayQuantity[yp]
+						dpScanLogAbbTrueStep +=1
+		#ADD INFO
+		dpScanLogAbbTrueQuantityLength = len(dpScanLogAbbTrueQuantity)
+		dpScanLogAbbTrueQuantityWidth = len(dpScanLogAbbTrueQuantity[0])
+		dpScanLogAbbFalseQuantityLength = len(dpScanLogAbbFalseQuantity)
+		dpScanLogAbbFalseQuantityWidth = len(dpScanLogAbbFalseQuantity[0])
+		for xp in range(0,2):
+			if xp ==0:
+				currentLength = dpScanLogAbbTrueQuantityLength
+				currentWidth = dpScanLogAbbTrueQuantityWidth
+				refdArray = dpScanLogAbbTrueQuantity
+			if xp ==1:
+				currentLength = dpScanLogAbbFalseQuantityLength
+				currentWidth = dpScanLogAbbFalseQuantityWidth
+				refdArray = dpScanLogAbbFalseQuantity
+			currentArray = it8c.dataCreateArray(currentLength,currentWidth +1,"")
+			for yp in range(0,currentLength):
+				pointa = refdArray[yp][2]
+				pointb = readProductDataRef(pointa)
+				for zp in range(0,currentWidth):
+					currentArray[yp][zp] = refdArray[yp][zp]
+				currentArray[yp][currentWidth] = pointb
+			if xp ==0:
+				del dpScanLogAbbTrueQuantity
+				dpScanLogAbbTrueQuantity = currentArray
+			if xp ==1:
+				del dpScanLogAbbFalseQuantity
+				dpScanLogAbbFalseQuantity = currentArray
 		#SAVE FILES
 		url = fldrUrlSystem +"/"+ fldrFileDbProductGlobalView #DB GLOBAL VIEW
 		it8c.csvWriteFile(dpScanArray,url,";",0)
@@ -338,8 +473,21 @@ def scanMasterDatabase():
 		it8c.csvWriteFile(dpScanArrayTrue,url,";",0)
 		url = fldrUrlSystem +"/"+ fldrFileDbProductLogAbFalse #DB LOGAB FALSE
 		it8c.csvWriteFile(dpScanArrayFalse,url,";",0)
+		url = fldrUrlSystem +"/"+ fldrFileDbProductQuantityTrue #DB QUANTITY TRUE
+		it8c.csvWriteFile(dpScanLogAbbTrueQuantity,url,";",0)
+		url = fldrUrlSystem +"/"+ fldrFileDbProductQuantityFalse #DB QUANTITY FALSE
+		it8c.csvWriteFile(dpScanLogAbbFalseQuantity,url,";",0)
+		#RESET
+		del dpScanArrayOld
+		del dpScanArray
+		del dpScanArrayTrue
+		del dpScanArrayFalse
+		del dpScanArrayQuantity
+		del dpScanLogAbbTrueQuantity
+		del dpScanLogAbbFalseQuantity
+		del dpScanArrayQuantityLength
 #PRINT LIMITED
-def viewLimitedArray(currentLogFile, customHeight):
+def viewLimitedArray(currentLogFile, customHeight, mode):
 	if customHeight !="":
 		maxHeight = customHeight
 	else:
@@ -355,7 +503,10 @@ def viewLimitedArray(currentLogFile, customHeight):
 			checkb[i] = checka[i]
 		printArray = checkb
 	printArrayB = it8c.dataFlipArrayObjects(printArray)
-	invArrayInfo = "ID", "LA", "MQ", "CQ", "Barcode", "Info"
+	if mode == 0:
+		invArrayInfo = "ID", "LA", "MQ", "CQ", "Barcode", "Info"
+	if mode == 1:
+		invArrayInfo = "MQ", "CQ", "Barcode", "Info"
 	printArray = it8c.dataAddArrayRow(printArrayB,invArrayInfo)
 	printArrayB = it8c.dataFlipArrayObjects(printArray)
 	return printArrayB
@@ -364,29 +515,48 @@ def viewGlobalInvMom(customHeight):
 	currentLogUrl = fldrUrlSystem +"/"+ fldrFileDbProductGlobalView
 	if it8c.fileTextExists(currentLogUrl) == 1:
 		currentLogFile = it8c.csvReadFile(currentLogUrl,";")
-		print(print2dArray(viewLimitedArray(currentLogFile,customHeight)))
+		print(print2dArray(viewLimitedArray(currentLogFile,customHeight,0)))
 #VIEW LOGAB TRUE INVENTORY MOMENT
 def viewLogAbTrueInvMom(customHeight):
 	currentLogUrl = fldrUrlSystem +"/"+ fldrFileDbProductLogAbTrue
 	if it8c.fileTextExists(currentLogUrl) == 1:
 		currentLogFile = it8c.csvReadFile(currentLogUrl,";")
-		print(print2dArray(viewLimitedArray(currentLogFile,customHeight)))
+		print(print2dArray(viewLimitedArray(currentLogFile,customHeight,0)))
 #VIEW LOGAB SEP INVENTORY MOMENT
 def viewLogAbSepInvMom(customHeight):
-	#URL
-	dpScanArrayFalseUrl = fldrUrlSystem +"/"+ fldrFileDbProductLogAbFalse
-	dpScanArrayTrueUrl = fldrUrlSystem +"/"+ fldrFileDbProductLogAbTrue
-	#LOAD FILES
-	if it8c.fileTextExists(dpScanArrayTrueUrl) == 1:
-		if it8c.fileTextExists(dpScanArrayFalseUrl) == 1:
-			#ARRAYS
-			dpScanArrayTrue = it8c.csvReadFile(dpScanArrayTrueUrl,";")
-			dpScanArrayFalse = it8c.csvReadFile(dpScanArrayFalseUrl,";")
-			#PRINT
-			print("Current")
-			print(print2dArray(viewLimitedArray(dpScanArrayTrue,customHeight)))
-			print("History")
-			print(print2dArray(viewLimitedArray(dpScanArrayFalse,customHeight)))
+	#SELCT
+	print("01"+ vslStLineAA +"Log")
+	print("02"+ vslStLineAA +"Quantity")
+	inputSelect = str(input(vslStLineAB))
+	if inputSelect !="":
+		clearScreen()
+		print(vslStTopBarAA)
+		print(vslStLineAB  +" "+ getTimeAndDate(1) +" : "+ returnPageName(uiusBcCheckInventory))	
+		access =0
+		if inputSelect == "1":
+			#URL
+			dpScanArrayFalseUrl = fldrUrlSystem +"/"+ fldrFileDbProductLogAbFalse
+			dpScanArrayTrueUrl = fldrUrlSystem +"/"+ fldrFileDbProductLogAbTrue
+			access =1
+			printMode =0
+		if inputSelect == "2":
+			#URL
+			dpScanArrayFalseUrl = fldrUrlSystem +"/"+ fldrFileDbProductQuantityFalse
+			dpScanArrayTrueUrl = fldrUrlSystem +"/"+ fldrFileDbProductQuantityTrue
+			access =1
+			printMode =1
+		if access == 1:
+			#LOAD FILES
+			if it8c.fileTextExists(dpScanArrayTrueUrl) == 1:
+				if it8c.fileTextExists(dpScanArrayFalseUrl) == 1:
+					#ARRAYS
+					dpScanArrayTrue = it8c.csvReadFile(dpScanArrayTrueUrl,";")
+					dpScanArrayFalse = it8c.csvReadFile(dpScanArrayFalseUrl,";")
+					#PRINT
+					print("Current")
+					print(print2dArray(viewLimitedArray(dpScanArrayTrue,customHeight,printMode)))
+					print("History")
+					print(print2dArray(viewLimitedArray(dpScanArrayFalse,customHeight,printMode)))
 #WRITE PRODUCT REF DATA
 def basicWriteProductRefData():
 	productID = makeLdMod(input("Product barcode: "))

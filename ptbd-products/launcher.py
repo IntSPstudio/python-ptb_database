@@ -2,7 +2,7 @@
 # Made by IntSPstudio
 # PTB Database
 # Thank you for using this software!
-# Version: 0.1.5.20171207
+# Version: 0.1.6.20171407
 # ID: 980005032
 #
 # Twitter: @IntSPstudio
@@ -34,9 +34,18 @@ if __name__ == "__main__":
 			rDefVslSettings()
 			#TB
 			mse.scanMasterDatabase() #SCAN
-			mse.viewLogAbSepInvMom(5)
+			mse.viewLogAbSepInvMom(10) #MAIN
 			#TC
 			checka = input(vslStInputAB)
+			mainPage = mse.uiusBckMenu
+		#CHECK PRODUCT DATA
+		elif mainPage == mse.uiusBcCheckProduct:
+			#TA
+			rDefVslSettings()
+			#TB
+			mse.scanMasterDatabase() #SCAN
+			mse.basicCheckProductData() #MAIN
+			#TC
 			mainPage = mse.uiusBckMenu
 		#MODIFY PRODUCT
 		elif mainPage == mse.uiusModifyProduct:
@@ -44,9 +53,9 @@ if __name__ == "__main__":
 			rDefVslSettings()
 			#TB
 			mse.scanMasterDatabase() #SCAN
-			mse.viewLogAbTrueInvMom(10)
+			mse.viewLogAbTrueInvMom(10) #PRINT
 			#print(vslMainTobBar)
-			mse.basicModifyProductData()
+			mse.basicModifyProductData() #MAIN
 			#TC
 			mainPage = mse.uiusBckMenu
 		#MODIFY PRODUCT INFO
@@ -54,7 +63,7 @@ if __name__ == "__main__":
 			#TA
 			rDefVslSettings()
 			#TB
-			mse.basicWriteProductRefData()
+			mse.basicWriteProductRefData() #MAIN
 			#TC
 			mainPage = mse.uiusBckMenu
 		#ADD TO INVETORY
