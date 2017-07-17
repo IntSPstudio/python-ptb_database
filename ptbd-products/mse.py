@@ -72,19 +72,22 @@ fldrUrlBackupData = fldrUrlMasterDatabase +"/"+ fldrBackupData
 fldrSystem ="system"
 fldrUrlSystem = fldrUrlMasterDatabase +"/"+ fldrSystem
 fldrUrlDataContentParameters ="usdaco"
-#FILES
-fldrFileQuantity ="quantity.txt"
-fldrFileProduct ="id.txt"
-fldrFileCreationDate ="cd.txt"
-fldrFileLogAb ="logab.txt"
-fldrFileDataContent = fldrUrlDataContentParameters +".txt"
-fldrFileDbProductIdList ="dbprid.txt"
-fldrFileDbProductAmounts ="dbpram.txt"
-fldrFileDbProductGlobalView ="dpprgv.csv"
-fldrFileDbProductLogAbTrue ="dpprlatv.csv"
-fldrFileDbProductLogAbFalse ="dpprlafv.csv"
-fldrFileDbProductQuantityTrue ="dpprqttv.csv"
-fldrFileDbProductQuantityFalse ="dpprqtfv.csv"
+#COM FILES
+fldrFileQuantity ="quantity.txt" #OFFLINE
+fldrFileProduct ="id.txt" #BARCODE
+fldrFileCreationDate ="cd.txt" #DATE WHEN IMPORTED
+fldrFileLogAb ="logab.txt" #IS IT LOGAB
+fldrFileDataContent = fldrUrlDataContentParameters +".txt" #USER DATA CONTENT
+#SETTINGS FOLDER FILES
+fldrFileDbProductIdList ="dbprid.txt" #PRODUCTS LIST BY ID
+fldrFileDbProductAmounts ="dbpram.txt" #PRODUCTS LIST BY AMOUNT
+fldrFileDbProductGlobalView ="dpprgv.csv" #GLOBAL VIEW OF INVENTORY
+fldrFileDbProductLogAbTrue ="dpprlatv.csv" #INVENTORY BY LOGAB TRUE
+fldrFileDbProductLogAbFalse ="dpprlafv.csv" #INVENTORY BY LOGAB FALSE
+fldrFileDbProductQuantityTrue ="dpprqttv.csv" #INVENTORY QUANTITY BY LOGAB TRUE
+fldrFileDbProductQuantityFalse ="dpprqtfv.csv" #INVENTORY QUANTITY BY LOGAB FALSE
+fldrFileDbProductDataViewTrue = "dpprcwt.csv" #USER DATA CONTENT VIEW BY LOGAB TRUE
+fldrFileDbProductDataViewFalse = "dpprcwf.csv" #USER DATA CONTENT VIEW BY LOGAB FALSE
 """
 fldrFileReference ="reference.csv"
 fldrUrlFileReference = fldrUrlMasterDatabase +"/"+ fldrFileReference
@@ -466,6 +469,66 @@ def scanMasterDatabase():
 			if xp ==1:
 				del dpScanLogAbbFalseQuantity
 				dpScanLogAbbFalseQuantity = currentArray
+		#USER DATA CONTENT
+		idLineTrue = it8c.dataExtractArrayColumn(dpScanArrayTrue,0) #LOGAB TRUE PRODUCT ID'S
+		idLineFalse = it8c.dataExtractArrayColumn(dpScanArrayFalse,0) #LOGAB FALSE PRODUCT ID'S
+		#SCAN EXISTS FILES
+		for zp in range(0,2):
+			if zp == 1:
+				idLineTrueKeys =[]
+				idLineFalseKeys =[]
+			for xp in range(0,2):
+				resultArray =[]
+				if xp == 0:
+					checkArray = idLineTrue
+				if xp == 1:
+					checkArray = idLineFalse
+				checkArrayLength = len(checkArray)
+				for yp in range(0,checkArrayLength):
+					pointa = str(checkArray[yp]) #ID
+					productUrl = fldrUrlMasterDatabase +"/"+ str(pointa) #URL
+					productUserDataContent = productUrl +"/"+ fldrFileDataContent
+					if it8c.fileTextExists(productUserDataContent) == 1:
+						if zp == 0:
+							resultArray.extend([pointa])
+						if zp == 1:
+							fileContent = it8c.copaRead(productUserDataContent,"=")
+							fileContentKeys = it8c.dataExtractArrayColumn(fileContent,0)
+							fileContentKeysLength = len(fileContentKeys)
+							for i in range(0, fileContentKeysLength):
+								pointb = fileContentKeys[i]
+								if pointb !="":
+									resultArray.extend([pointb])
+				if zp == 1:
+					checka = it8c.encryptSha256("&%2689")
+					resultArray.extend([checka])
+					fileContent = it8c.dataExtractArrayColumn(it8c.dataCheckListObjects(resultArray),2)
+					fileContentLength = len(fileContent)
+					resultArray =[]
+					for i in range(0, fileContentLength):
+						checkb = fileContent[i]
+						if checkb != checka:
+							resultArray.extend([checkb])
+				if xp == 0:
+					if zp == 0:
+						idLineTrue = resultArray
+					if zp == 1:
+						idLineTrueKeys = resultArray
+				if xp == 1:
+					if zp == 0:
+						idLineFalse = resultArray
+					if zp == 1:
+						idLineFalseKeys = resultArray
+		
+		#PARAMETER ADDER
+		idLineTrueAccess =0
+		idLineFalseAccess =0
+		if len(idLineTrueKeys) > 1:
+			idLineTrueAccess =1
+			idLineTrueArray = scanDatabaseExtraParameterAa(idLineTrue, idLineTrueKeys)
+		if len(idLineFalseKeys) > 1:
+			idLineFalseAccess =1
+			idLineFalseArray = scanDatabaseExtraParameterAa(idLineFalse, idLineFalseKeys)
 		#SAVE FILES
 		url = fldrUrlSystem +"/"+ fldrFileDbProductGlobalView #DB GLOBAL VIEW
 		it8c.csvWriteFile(dpScanArray,url,";",0)
@@ -477,6 +540,12 @@ def scanMasterDatabase():
 		it8c.csvWriteFile(dpScanLogAbbTrueQuantity,url,";",0)
 		url = fldrUrlSystem +"/"+ fldrFileDbProductQuantityFalse #DB QUANTITY FALSE
 		it8c.csvWriteFile(dpScanLogAbbFalseQuantity,url,";",0)
+		if idLineTrueAccess == 1:
+			url = fldrUrlSystem +"/"+ fldrFileDbProductDataViewTrue #DB USER CONTENT TRUE
+			it8c.csvWriteFile(idLineTrueArray,url,";",0)
+		if idLineFalseAccess == 1:
+			url = fldrUrlSystem +"/"+ fldrFileDbProductDataViewFalse #DB USER CONTENT FALSE
+			it8c.csvWriteFile(idLineFalseArray,url,";",0)
 		#RESET
 		del dpScanArrayOld
 		del dpScanArray
@@ -486,6 +555,55 @@ def scanMasterDatabase():
 		del dpScanLogAbbTrueQuantity
 		del dpScanLogAbbFalseQuantity
 		del dpScanArrayQuantityLength
+#PARAMETER AA
+def scanDatabaseExtraParameterAa(contentArray, keyArray):
+	contentArrayLength = len(contentArray)
+	keyArrayLength = len(keyArray)
+	resultArrayWidth = keyArrayLength +3
+	resultArrayHeight = contentArrayLength +1
+	resultArray = it8c.dataCreateArray(resultArrayHeight,resultArrayWidth," ")
+	#KEY CONTENT
+	for i in range(0,keyArrayLength):
+		resultArray[0][i] = keyArray[i]
+	#PRODUCTS
+	productIDpos = keyArrayLength
+	productBarcodePos = productIDpos +1
+	productInfoPos = productBarcodePos +1
+	resultArray[0][productIDpos] ="ID"
+	resultArray[0][productBarcodePos] ="Barcode"
+	resultArray[0][productInfoPos] ="Info"
+	for i in range(0, contentArrayLength):
+		#i = contentArrayLength - j -1
+		y = i+1
+		#PRODUCT INFO
+		productID = str(contentArray[i])
+		productUrl = fldrUrlMasterDatabase +"/"+ str(productID)
+		#PRODUCT BARCODE
+		url = productUrl +"/"+ fldrFileProduct
+		if it8c.fileTextExists(url) == 1:
+			productCode = mainReadTextFile(url)
+		#PRODUCT INFO
+		productInfo = readProductDataRef(productCode)
+		#ARRAY BASIC DATA
+		resultArray[y][productIDpos] = productID
+		resultArray[y][productBarcodePos] = productCode
+		resultArray[y][productInfoPos] = productInfo
+		#PRODUCT USER DATA
+		url = productUrl +"/"+ fldrFileDataContent
+		if it8c.fileTextExists(url) == 1:
+			#LIMITS
+			productUserData = it8c.copaRead(url,"=")
+			productUserDataHeight = len(productUserData)
+			productUserDataWidth = len(productUserData[0])
+			#CONTENT
+			for yp in range(0,productUserDataHeight):
+				pointa = productUserData[yp][0]
+				for xp in range(0,keyArrayLength):
+					checka = resultArray[0][xp]
+					if pointa == checka:
+						#IMPORT USER DATA VALUE BY KEY
+						resultArray[y][xp] = productUserData[yp][1]
+	return resultArray
 #PRINT LIMITED
 def viewLimitedArray(currentLogFile, customHeight, mode):
 	if customHeight !="":
@@ -502,14 +620,26 @@ def viewLimitedArray(currentLogFile, customHeight, mode):
 		for i in range(0, maxHeight):
 			checkb[i] = checka[i]
 		printArray = checkb
-	printArrayB = it8c.dataFlipArrayObjects(printArray)
-	if mode == 0:
-		invArrayInfo = "ID", "LA", "MQ", "CQ", "Barcode", "Info"
-	if mode == 1:
-		invArrayInfo = "MQ", "CQ", "Barcode", "Info"
-	printArray = it8c.dataAddArrayRow(printArrayB,invArrayInfo)
-	printArrayB = it8c.dataFlipArrayObjects(printArray)
-	return printArrayB
+	if mode ==2:
+		printArray = it8c.dataFlipArrayObjects(printArray)
+		printArrayTitles = printArray[0]
+		printArrayLength = len(printArray)
+		returnArrayWidth = len(printArray[0])
+		returnArray = it8c.dataCreateArray(printArrayLength -1,returnArrayWidth,"")
+		for i in range(1,printArrayLength):
+			returnArray[i -1] = printArray[i]
+		returnArray = it8c.dataAddArrayRow(returnArray,printArrayTitles)
+		returnArray = it8c.dataFlipArrayObjects(returnArray)
+		return returnArray
+	else:
+		printArrayB = it8c.dataFlipArrayObjects(printArray)
+		if mode ==0:
+			invArrayInfo = "ID", "LA", "MQ", "CQ", "Barcode", "Info"
+		if mode ==1:
+			invArrayInfo = "MQ", "CQ", "Barcode", "Info"
+		printArray = it8c.dataAddArrayRow(printArrayB,invArrayInfo)
+		printArrayB = it8c.dataFlipArrayObjects(printArray)
+		return printArrayB
 #VIEW GLOBAL INVENTORY MOMENT
 def viewGlobalInvMom(customHeight):
 	currentLogUrl = fldrUrlSystem +"/"+ fldrFileDbProductGlobalView
@@ -527,6 +657,7 @@ def viewLogAbSepInvMom(customHeight):
 	#SELCT
 	print("01"+ vslStLineAA +"Log")
 	print("02"+ vslStLineAA +"Quantity")
+	print("03"+ vslStLineAA +"Parameters")
 	inputSelect = str(input(vslStLineAB))
 	if inputSelect !="":
 		clearScreen()
@@ -545,6 +676,12 @@ def viewLogAbSepInvMom(customHeight):
 			dpScanArrayTrueUrl = fldrUrlSystem +"/"+ fldrFileDbProductQuantityTrue
 			access =1
 			printMode =1
+		if inputSelect == "3":
+			#URL
+			dpScanArrayFalseUrl = fldrUrlSystem +"/"+ fldrFileDbProductDataViewFalse
+			dpScanArrayTrueUrl = fldrUrlSystem +"/"+ fldrFileDbProductDataViewTrue
+			access =1
+			printMode =2
 		if access == 1:
 			#LOAD FILES
 			if it8c.fileTextExists(dpScanArrayTrueUrl) == 1:
@@ -555,6 +692,7 @@ def viewLogAbSepInvMom(customHeight):
 					#PRINT
 					print("Current")
 					print(print2dArray(viewLimitedArray(dpScanArrayTrue,customHeight,printMode)))
+					print()
 					print("History")
 					print(print2dArray(viewLimitedArray(dpScanArrayFalse,customHeight,printMode)))
 #WRITE PRODUCT REF DATA
