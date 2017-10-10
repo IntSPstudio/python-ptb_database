@@ -2,194 +2,73 @@
 # Made by IntSPstudio
 # PTB Database
 # Thank you for using this software!
-# Version: 0.0.1.20170404
-# ID: 980005032
+# Version: 0.1.2.20171010
+# ID: 980005031
 #
 # Twitter: @IntSPstudio
 #|==============================================================|#
 
 #IMPORT
-import it8c  #Data handling
-import os #OS commands
-import mse #Main settings
-import datetime #Timing
-#SETTINGS
-uiusOS = mse.osSystem
-mainClearCommand = mse.osClearCommand
-#dataFolderName = use.folderDataName
-continuity =1
-mainPage =""
-clcnPages =""
-
-currentProject =""
-currentLogUrl =""
-currentLogFile =""
-currentLogID =0
-currentLog =""
-#PAGES
-uiusBckMainMenu = mse.pagesMainMenu
-uiusBckAddEvent = mse.pagesAddEvent
-uiusBckShowEvents = mse.pagesShowEvents
-uiusBckFeatures = mse.pagesFeatures
-uiusBckShowInfo = mse.pagesShowInfo
-uiusBckOpenLog = mse.pagesOpenLog
-uiusBckOpenProject = mse.pagesOpenProject
-uiusBckExit = mse.pagesExit
-#VISUAL
-bgdLine = it8c.vslTerminalLine(0,"")
-dcnyStInputLine = mse.vslStLineAB
-#BASIC OS COMMANDS
-def exCommand(command):
-	if command == "clear":
-		os.system(mainClearCommand)
-#BASIC PRINT
-def vslBasicTopPrint():
-	print(bgdLine)
-	if currentProject !="":
-		if currentLog !="":
-			print(dcnyStInputLine +" "+ "Project:"+ currentProject +" - Log:"+ currentLog)
-		else:
-			print(dcnyStInputLine +" "+ "Project:"+ currentProject)
-	else:
-		print(dcnyStInputLine)
-#CHANGE LOG FILE
-def changeLogFile():
-	result =""
-	if currentProject !="":
-		checka = str(input("Log name: "))
-		checkb = str.lower(it8c.lettersdigits(checka,""))
-		if checkb !="":
-			result = checkb
-		else:
-			checka = input("Incorrect name")
-	else:
-		checka = input("No open project")
-	return result
-#ADD EVENT TO PROJECT
-def addEventToProject():
-	currentLogUrl = currentProject +"/"+ currentLog +"-log.csv"
-	if it8c.fileTextExists(currentLogUrl) == 1:
-		currentLogFile = it8c.csvReadFile(currentLogUrl,";")
-		currentLogID = len(currentLogFile)
-	else:
-		if not os.path.exists(currentProject):
-			os.makedirs(currentProject)
-		currentLogID =0
-	checka = datetime.datetime.now()
-	pointa = it8c.dataCreateList(2,"")
-	pointb = mse.updateDateTime(checka)
-	pointa[0] = str(currentLogID)
-	pointa[1] = pointb[0] +" "+ pointb[1]
-	pointc =""
-	exitCode = "ext"
-	while pointc != exitCode:
-		pointc = input("Event: ")
-		if pointc !="":
-			if pointc != exitCode:
-				pointa.extend([pointc])
-			
-	if currentLogID > 0:
-		currentLogFile = it8c.dataAddArrayRow(currentLogFile,pointa)
-	else:
-		
-		currentLogFile = it8c.dataCreateArray(1,1,"")
-		currentLogFile[0] = pointa
-	it8c.csvWriteFile(currentLogFile,currentLogUrl,";",0)
+import mse
+#RETURN DEFAULT VSL SETTINGS
+def rDefVslSettings():
+	mse.clearScreen()
+	print(vslMainTobBar)
+	print(mse.vslStLineAB  +" "+ mse.getTimeAndDate(1) +" : "+ mse.returnPageName(mainPage))
 #START
 if __name__ == "__main__":
+	#SETTINGS
+	continuity =1
+	#VISUAL
+	vslMainTobBar = mse.vslStTopBarAA
+	vslStInputAB = mse.vslStLineAB
+	#PAGES
+	mainPage = mse.uiusBckMenu
+	#FOLDERS
+	mse.checkSystemFolders()
+	#LOOP
 	while continuity == 1:
-		#ADD EVENT
-		if mainPage == uiusBckAddEvent:
+		#CHECK INVETORY
+		if mainPage == mse.uiusBcCheckInventory:
 			#TA
-			exCommand("clear")
-			vslBasicTopPrint()
+			rDefVslSettings()
 			#TB
-			if currentProject !="":
-				if currentLog !="":
-					addEventToProject()
-				else:
-					checka = input("Open log first")
-			else:
-				checka = input("No open project")
+			print(mse.readUserContentFromDatabase())
+			pointa = input(vslStInputAB)
 			#TC
-			mainPage = uiusBckMainMenu
-		#SHOW EVENTS
-		if mainPage == uiusBckShowEvents:
+			mainPage = mse.uiusBckMenu
+		#ADD TO INVETORY
+		elif mainPage == mse.uiusBcAddToInvetory:
 			#TA
-			exCommand("clear")
-			vslBasicTopPrint()
+			rDefVslSettings()
 			#TB
-			if currentProject !="":
-				if currentLog !="":
-					currentLogUrl = currentProject +"/"+ currentLog +".csv"
-					if it8c.fileTextExists(currentLogUrl) == 1:
-						currentLogFile = it8c.csvReadFile(currentLogUrl,";")
-						currentLogWidth = len(currentLogFile[0])
-						currentLogHeight = len(currentLogFile)
-						maxHeight =10
-						checkb = it8c.dataFlipArrayObjects(currentLogFile)
-						if currentLogHeight <= maxHeight:
-							print(it8c.dataSmrPrintArray(checkb," : "," ",0))
-						else:
-							checkc = it8c.dataCreateArray(maxHeight,currentLogWidth,"")
-							for i in range(0, maxHeight):
-								checkc[i] = checkb[i]
-							print(it8c.dataSmrPrintArray(checkc," : "," ",0))
+			mse.addUserContentToDatabase()
 			#TC
-			checka = input(dcnyStInputLine)
-			mainPage = uiusBckMainMenu
-		#FEATURES
-		if mainPage == uiusBckFeatures:
+			mainPage = mse.uiusBckMenu
+		#MODIFY ADDER
+		elif mainPage == mse.uiusBcModifyAdder:
 			#TA
-			exCommand("clear")
-			vslBasicTopPrint()
-			#TC
-			checka = input(dcnyStInputLine)
-			mainPage = uiusBckMainMenu
-		#INFO
-		if mainPage == uiusBckShowInfo:
-			#TA
-			exCommand("clear")
-			vslBasicTopPrint()
-			#TC
-			checka = input(dcnyStInputLine)
-			mainPage = uiusBckMainMenu
-		#LOG
-		if mainPage == uiusBckOpenLog:
-			#TA
-			exCommand("clear")
-			vslBasicTopPrint()
+			rDefVslSettings()
 			#TB
-			checka = changeLogFile()
-			if checka !="":
-				currentLog = checka
+			mse.getInputSkelTexts()
 			#TC
-			mainPage = uiusBckMainMenu
-		#PROJECT
-		if mainPage == uiusBckOpenProject:
-			#TA
-			exCommand("clear")
-			vslBasicTopPrint()
-			#TB
-			checka = str(input("Project name: "))
-			checkb = str.lower(it8c.lettersdigits(checka,""))
-			if checkb !="":
-				currentProject = checkb
-			#TC
-			mainPage = uiusBckMainMenu
+			mainPage = mse.uiusBckMenu
 		#EXIT
-		if mainPage == uiusBckExit:
+		elif mainPage == mse.uiusBckExit:
 			#TA
-			exCommand("clear")
+			mse.clearScreen()
 			continuity =0
 			print(mse.exitLogo())
 		#MENU
 		else:
 			#TA
-			exCommand("clear")
-			vslBasicTopPrint()
+			mainPage = mse.uiusBckMenu
+			rDefVslSettings()
 			#TB
-			print(mse.printAllPages())
+			for i in range(1,int(mse.uiusBckExit) +1):
+				checka = str(i)
+				checkb = mse.returnPageName(checka)
+				print("0"+ checka +"]"+ checkb)
 			#TC
-			checka = input(dcnyStInputLine)
+			checka = input(vslStInputAB)
 			mainPage = str(checka)
