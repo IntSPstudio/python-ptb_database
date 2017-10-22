@@ -175,12 +175,8 @@ def readProductDataRef(productID):
 		pointa = it8c.copaRead(refPlateUrl,"=")
 		checka = len(pointa)
 		if checka >= 1:
-			#pointb = pointa[0][0] #A1
 			pointc = pointa[0][1] #A2
-			#pointd = pointa[1][0] #B1
 			pointe = pointa[1][1] #B2
-			#checkb = pointb +": "+ pointc +", "+ pointd +": "+ pointe
-			#return checkb
 			return pointc +" "+ pointe
 	else:
 		return "no data"

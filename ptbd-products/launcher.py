@@ -54,7 +54,6 @@ if __name__ == "__main__":
 			#TB
 			mse.scanMasterDatabase() #SCAN
 			mse.viewLogAbTrueInvMom(10) #PRINT
-			#print(vslMainTobBar)
 			mse.basicModifyProductData() #MAIN
 			#TC
 			mainPage = mse.uiusBckMenu
