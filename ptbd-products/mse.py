@@ -20,7 +20,6 @@ vslStTopBarAA = it8c.vslTerminalLine(0,"")
 #OPERATING SYSTEM SETTINGS
 def clearScreen():
 	os.system(osClearCommand)
-	#print("clear")
 checka = str.lower(platform.system())
 if checka == "windows":
 	osSystem =1
@@ -88,11 +87,6 @@ fldrFileDbProductQuantityTrue ="dpprqttv.csv" #INVENTORY QUANTITY BY LOGAB TRUE
 fldrFileDbProductQuantityFalse ="dpprqtfv.csv" #INVENTORY QUANTITY BY LOGAB FALSE
 fldrFileDbProductDataViewTrue = "dpprcwt.csv" #USER DATA CONTENT VIEW BY LOGAB TRUE
 fldrFileDbProductDataViewFalse = "dpprcwf.csv" #USER DATA CONTENT VIEW BY LOGAB FALSE
-"""
-fldrFileReference ="reference.csv"
-fldrUrlFileReference = fldrUrlMasterDatabase +"/"+ fldrFileReference
-fldrFileReferenceExist =1
-"""
 #PAGES
 uiusBcCheckInventory ="1"
 uiusBcCheckProduct ="2"
@@ -133,7 +127,14 @@ def checkProductSpecId():
 def checkSystemFolders():
 	#DATABASE
 	if not os.path.exists(fldrUrlMasterDatabase):
+		#MASTER
 		os.makedirs(fldrUrlMasterDatabase)
+		#DUMMY
+		os.makedirs(fldrUrlMasterDatabase +"/1")
+		checkb = fldrUrlMasterDatabase +"/1/"+ fldrFileLogAb #LOGAB URLS
+		mainWriteListTextFile("0",checkb) #ID
+		checkb = fldrUrlMasterDatabase +"/1/"+ fldrFileProduct #NAME
+		mainWriteListTextFile(" ",checkb) #ID
 	#SHOPLIST
 	if not os.path.exists(fldrUrlShoppingList):
 		os.makedirs(fldrUrlShoppingList)
@@ -182,17 +183,20 @@ def readProductDataRef(productID):
 		return "no data"
 #CHECK PRODUCT DATA
 def basicCheckProductData():
-	#SELCT
-	for i in range(0,2):
-		print("01"+ vslStLineAA +"ID")
-		print("02"+ vslStLineAA +"Barcode")
-		if i == 0:
-			inputSelect = str(input(vslStLineAB))
-			clearScreen()
-			print(vslStTopBarAA)
-			print(vslStLineAB  +" "+ getTimeAndDate(1) +" : "+ returnPageName(uiusBcCheckProduct))
+	#SELECT
+	print("01"+ vslStLineAA +"ID")
+	print("02"+ vslStLineAA +"Barcode")
+	inputSelect = str(input(vslStLineAB))
+	clearScreen()
+	print(vslStTopBarAA)
+	print(vslStLineAB  +" "+ getTimeAndDate(1) +" : "+ returnPageName(uiusBcCheckProduct))
 	#INPUT SELECT
 	if inputSelect == "1":
+		#INVENTORY
+		invArrayUrl = fldrUrlSystem +"/"+ fldrFileDbProductLogAbTrue
+		if it8c.fileTextExists(invArrayUrl) == 1:
+			invArray = it8c.csvReadFile(invArrayUrl,";")
+			print(print2dArray(viewLimitedArray(invArray, 10, 0)))
 		#PRODUCT ID
 		checka = vslStLineAB +"ID: "
 		productID = str(input(checka))
@@ -231,11 +235,22 @@ def basicCheckProductData():
 						pointb = userContentData[i][1]
 						print(pointa +":", pointb)
 				checka = input(vslStLineAB)
-	"""
 	if inputSelect == "2":
 		checka = vslStLineAB +"Barcode: "
-		productID = str(input(checka))
-	"""
+		productID = makeLdMod(str(input(checka)))
+		if productID !="":
+			#SCAN
+			if os.path.exists(fldrUrlReference): #FOLDER
+				fileNameI = fldrUrlReference +"/"+ productID +".txt"
+				if it8c.fileTextExists(fileNameI) == 1:
+					contentArray = it8c.copaRead(fileNameI,"=")
+					#PRINT
+					clearScreen()
+					print(vslStTopBarAA)
+					print(vslStLineAB  +" "+ getTimeAndDate(1) +" : "+ str(productID))
+					print("MAIN DATA:")
+					print(it8c.dataSmrPrintArray(contentArray,"= ","",0))
+					checka = input(vslStLineAB)
 #ADD TO SHOPPING LIST
 def basicAddBarcodeToInventary():
 	continuity =1
@@ -723,13 +738,26 @@ def basicModifyProductData():
 		if productID != mainExitCommand:
 			productUrl = fldrUrlMasterDatabase +"/"+ productID
 			if os.path.exists(productUrl):
-				#PRODUCT CHECK
+				#CLEAN FOR TABLE
+				prCheckUrl = fldrUrlMasterDatabase +"/"+ productID +"/"+ fldrFileDataContent
+				if it8c.fileTextExists(prCheckUrl) == 1:
+					clearScreen()
+					print(vslStTopBarAA)
+				#PRODUCT CHECK NAME
 				prCheckUrl = fldrUrlMasterDatabase +"/"+ productID +"/"+ fldrFileProduct
 				if it8c.fileTextExists(prCheckUrl) == 1:
 					checka = it8c.fileRead1LText(prCheckUrl)
 					checkb = readProductDataRef(checka)
-				print(checkb)
+				print(str.upper(checkb))
+				#PRODUCT CHECK
+				prCheckUrl = fldrUrlMasterDatabase +"/"+ productID +"/"+ fldrFileDataContent
+				if it8c.fileTextExists(prCheckUrl) == 1:
+					print()
+					print(str.upper(fldrUrlDataContentParameters))
+					checka = it8c.copaRead(prCheckUrl,"=")
+					print(it8c.dataSmrPrintArray(checka," = ","",0))
 				#MAIN
+				print()
 				refPlateName = input("Ref file: ")
 				refPlateUrl = fldrUrlProductDataTemplates +"/"+ refPlateName +".txt"
 				if it8c.fileTextExists(refPlateUrl) == 1:
@@ -783,7 +811,7 @@ def basicModifyProductData():
 								#PAR HISTORY NAME
 								fileName = str.lower(it8c.lettersdigits(pointa,""))
 								fileUrl = fldrUrl +"/"+ fileName +".txt"
-								it8c.copaMod(fileUrl,getTimeAndDate(0),pointb,0,"")
+								it8c.copaMod(fileUrl,getTimeAndDate(1),pointb,0,"")
 							else:
 								if checka == pageLogAb:
 									pageLogAbUrl = fldrUrlMasterDatabase +"/"+ productID +"/"+ fldrFileLogAb #URL
