@@ -1,2 +1,2 @@
-# PTB Databas
+# PTB Database
 ### * Work in progress * 
